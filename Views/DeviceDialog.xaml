@@ -1,0 +1,91 @@
+<Window x:Class="WakeOnLan.Views.DeviceDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Añadir dispositivo"
+        Width="480"
+        Background="{StaticResource WindowFallbackBrush}"
+        FontFamily="{StaticResource AppFont}"
+        Foreground="{StaticResource TextBrush}"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="TitleBar" Height="40">
+            <TextBlock Margin="16,0"
+                       VerticalAlignment="Center"
+                       FontSize="12"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Text="Wake on LAN" />
+        </Grid>
+
+        <StackPanel Grid.Row="1" Margin="24,4,24,24">
+            <TextBlock x:Name="HeaderText" FontSize="20" FontWeight="SemiBold" Text="Añadir dispositivo" />
+
+            <TextBlock Style="{StaticResource FieldLabel}" Text="Nombre" />
+            <TextBox x:Name="NameBox" Tag="Ej. PC del salón" />
+
+            <TextBlock Style="{StaticResource FieldLabel}" Text="Dirección IP o nombre de host (opcional, para ver si está encendido)" TextWrapping="Wrap" />
+            <TextBox x:Name="IpBox" Tag="Ej. 192.168.1.20" />
+
+            <TextBlock Style="{StaticResource FieldLabel}" Text="Dirección MAC" />
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="MacBox" Tag="AA:BB:CC:DD:EE:FF" />
+                <Button x:Name="DetectMacButton"
+                        Grid.Column="1"
+                        Margin="8,0,0,0"
+                        Click="DetectMac_Click"
+                        ToolTip="El equipo debe estar encendido y en tu red local">
+                    <TextBlock x:Name="DetectMacText" Text="Obtener desde IP" />
+                </Button>
+            </Grid>
+
+            <Grid Margin="0,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="110" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Enviar a (opcional)" />
+                    <TextBox x:Name="BroadcastBox" Tag="Automático (broadcast)" />
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="Puerto UDP" />
+                    <TextBox x:Name="PortBox" Tag="9" />
+                </StackPanel>
+            </Grid>
+
+            <Border x:Name="ErrorPanel"
+                    Margin="0,16,0,0"
+                    Padding="12,8"
+                    Background="#26FF99A4"
+                    CornerRadius="4"
+                    Visibility="Collapsed">
+                <TextBlock x:Name="ErrorText" Foreground="{StaticResource DangerBrush}" TextWrapping="Wrap" />
+            </Border>
+        </StackPanel>
+
+        <Border Grid.Row="2" Padding="24,20" Background="{StaticResource FooterBrush}">
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button x:Name="SaveButton"
+                        MinWidth="120"
+                        Click="Save_Click"
+                        Content="Añadir"
+                        IsDefault="True"
+                        Style="{StaticResource AccentButton}" />
+                <Button MinWidth="120" Margin="8,0,0,0" Content="Cancelar" IsCancel="True" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>WakeOnLan</AssemblyName>
+    <RootNamespace>WakeOnLan</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <Product>Wake on LAN</Product>
+    <Description>Enciende los equipos de tu red con Wake-on-LAN.</Description>
+  </PropertyGroup>
+
+</Project>

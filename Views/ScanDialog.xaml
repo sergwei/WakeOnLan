@@ -1,0 +1,122 @@
+﻿<Window x:Class="WakeOnLan.Views.ScanDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:m="clr-namespace:WakeOnLan.Models"
+        Title="Escanear red"
+        Width="660"
+        Height="600"
+        MinWidth="520"
+        MinHeight="420"
+        Background="{StaticResource WindowFallbackBrush}"
+        FontFamily="{StaticResource AppFont}"
+        Foreground="{StaticResource TextBrush}"
+        ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="TitleBar" Height="40">
+            <TextBlock Margin="16,0"
+                       VerticalAlignment="Center"
+                       FontSize="12"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Text="Wake on LAN" />
+        </Grid>
+
+        <StackPanel Grid.Row="1" Margin="24,4,24,0">
+            <TextBlock FontSize="20" FontWeight="SemiBold" Text="Buscar dispositivos en la red" />
+            <TextBlock x:Name="NetworksText"
+                       Margin="0,4,0,0"
+                       FontSize="13"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Margin="24,16,24,12">
+            <ProgressBar x:Name="ScanProgress" />
+            <Grid Margin="0,10,0,0">
+                <TextBlock x:Name="StatusText"
+                           VerticalAlignment="Center"
+                           FontSize="13"
+                           Foreground="{StaticResource TextSecondaryBrush}" />
+                <CheckBox x:Name="SelectAllBox"
+                          HorizontalAlignment="Right"
+                          Click="SelectAll_Click"
+                          Content="Seleccionar todos"
+                          FontSize="13"
+                          IsEnabled="False" />
+            </Grid>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="3" Padding="24,0" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="ResultsList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type m:ScanResult}">
+                        <Border Margin="0,0,0,4"
+                                Padding="14,10"
+                                Background="{StaticResource CardBrush}"
+                                BorderBrush="{StaticResource CardBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="6">
+                            <CheckBox HorizontalContentAlignment="Stretch"
+                                      IsChecked="{Binding IsSelected}"
+                                      IsEnabled="{Binding CanSelect}">
+                                <Grid Margin="4,0,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock FontSize="14"
+                                                   FontWeight="SemiBold"
+                                                   Text="{Binding DisplayName}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Margin="0,2,0,0"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource TextSecondaryBrush}"
+                                                   Text="{Binding Details}" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1"
+                                            Padding="10,3"
+                                            VerticalAlignment="Center"
+                                            Background="#14FFFFFF"
+                                            CornerRadius="10"
+                                            Visibility="{Binding Badge, Converter={StaticResource EmptyToCollapsed}}">
+                                        <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}" Text="{Binding Badge}" />
+                                    </Border>
+                                </Grid>
+                            </CheckBox>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <Border Grid.Row="4" Margin="0,12,0,0" Padding="24,20" Background="{StaticResource FooterBrush}">
+            <Grid>
+                <Button x:Name="RescanButton" HorizontalAlignment="Left" Click="Rescan_Click" IsEnabled="False">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Style="{StaticResource IconText}" Text="&#xE72C;" />
+                        <TextBlock Margin="8,0,0,0" Text="Volver a escanear" />
+                    </StackPanel>
+                </Button>
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button x:Name="AddButton"
+                            MinWidth="130"
+                            Click="Add_Click"
+                            IsEnabled="False"
+                            Style="{StaticResource AccentButton}">
+                        <TextBlock x:Name="AddButtonText" Text="Añadir" />
+                    </Button>
+                    <Button MinWidth="110" Margin="8,0,0,0" Content="Cerrar" IsCancel="True" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

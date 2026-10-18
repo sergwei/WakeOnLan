@@ -1,0 +1,47 @@
+name: Release
+
+# Al publicar un tag v1.2.3 se compila y se crea una Release con el portable y el instalador.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Calcular versión
+        id: version
+        shell: pwsh
+        run: |
+          $v = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '0.0.0-dev' }
+          "value=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Instalar Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Publicar
+        shell: pwsh
+        run: ./tools/Publish.ps1 -Version ${{ steps.version.outputs.value }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WakeOnLan-${{ steps.version.outputs.value }}
+          path: artifacts/*.exe
+
+      - name: Crear Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.exe
+          generate_release_notes: true
