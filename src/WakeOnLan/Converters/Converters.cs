@@ -40,7 +40,8 @@ public sealed class LastSeenConverter : IValueConverter
             return $"Visto hace {(int)elapsed.TotalHours} h";
         if (elapsed < TimeSpan.FromDays(7))
             return $"Visto hace {(int)elapsed.TotalDays} d";
-        return $"Visto el {lastSeen:dd/MM/yyyy}";
+        // Invariante: en un formato personalizado "/" es el separador de la cultura ("." en alemán).
+        return "Visto el " + lastSeen.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>

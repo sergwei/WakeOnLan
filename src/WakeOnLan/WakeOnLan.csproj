@@ -11,6 +11,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <Version>1.0.0</Version>
+    <!-- ProductVersion = "1.2.3" exacto (sin "+hash"): la firma de SignPath exige que coincida con la release. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Product>Wake on LAN</Product>
     <Description>Enciende los equipos de tu red con Wake-on-LAN.</Description>
   </PropertyGroup>

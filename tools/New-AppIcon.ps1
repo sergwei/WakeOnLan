@@ -1,6 +1,6 @@
 ﻿# Genera Assets\app.ico (16-256 px) dibujando el glifo de encendido de Segoe Fluent Icons.
 # Uso: powershell -ExecutionPolicy Bypass -File tools\New-AppIcon.ps1
-param([string]$OutFile = (Join-Path $PSScriptRoot '..\Assets\app.ico'))
+param([string]$OutFile = (Join-Path $PSScriptRoot '..\src\WakeOnLan\Assets\app.ico'))
 
 Add-Type -AssemblyName System.Drawing
 
