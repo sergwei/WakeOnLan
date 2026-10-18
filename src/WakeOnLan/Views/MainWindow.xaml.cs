@@ -17,15 +17,74 @@ public partial class MainWindow : Window
     private const string FileFilter = "Lista de dispositivos (*.json)|*.json|Todos los archivos (*.*)|*.*";
 
     private readonly MainViewModel _viewModel = new();
+    private readonly TrayIcon _tray = new();
+    private readonly TrayFlyout _flyout;
+    private WindowState _restoreState = WindowState.Normal;
+    private bool _trayHintShown;
 
     public MainWindow()
     {
         InitializeComponent();
         WindowEffects.Apply(this);
         DataContext = _viewModel;
-        Loaded += (_, _) => _viewModel.Start();
-        Closing += (_, _) => _viewModel.Shutdown();
+
+        _flyout = new TrayFlyout(_viewModel);
+        _flyout.OpenRequested += (_, _) => RestoreFromTray();
+        _flyout.ExitRequested += (_, _) => Application.Current.Shutdown();
+        _tray.Clicked += (_, _) => _flyout.Toggle();
+
+        _viewModel.DeviceCameOnline += (_, device) =>
+            _tray.ShowNotification($"«{device.Name}» está en línea", "El equipo ha arrancado correctamente.");
+        _viewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.FavoritesSummary))
+                UpdateTrayText();
+        };
+
+        StateChanged += OnStateChanged;
+
+        // La app puede arrancar directamente en la bandeja (sin mostrar nunca la ventana), así que
+        // la monitorización empieza aquí y la limpieza se hace al salir de la aplicación, no al cerrar la ventana.
+        Application.Current.Exit += (_, _) =>
+        {
+            _tray.Dispose();
+            _viewModel.Shutdown();
+        };
+        _viewModel.Start();
+        UpdateTrayText();
     }
+
+    // ----- Bandeja del sistema -----
+
+    /// <summary>Muestra la ventana principal desde la bandeja (o desde una segunda instancia de la app).</summary>
+    public void RestoreFromTray()
+    {
+        _flyout.HideFlyout();
+        Show();
+        if (WindowState == WindowState.Minimized)
+            WindowState = _restoreState;
+        Activate();
+    }
+
+    private void OnStateChanged(object? sender, EventArgs e)
+    {
+        if (WindowState != WindowState.Minimized)
+        {
+            _restoreState = WindowState;
+            return;
+        }
+
+        // Minimizar = ir a la bandeja: la app sigue vigilando el estado de los equipos.
+        Hide();
+        if (_trayHintShown)
+            return;
+
+        _trayHintShown = true;
+        _tray.ShowNotification("Wake on LAN sigue activo",
+            "Haz clic en el icono de la bandeja para ver y encender tus favoritos.");
+    }
+
+    private void UpdateTrayText() => _tray.Text = $"Wake on LAN · {_viewModel.FavoritesSummary}";
 
     private List<Device> SelectedDevices => DeviceList.SelectedItems.Cast<Device>().ToList();
 
@@ -78,6 +137,14 @@ public partial class MainWindow : Window
         if (DeviceFrom(sender) is { } device)
             await _viewModel.WakeAsync(TargetsFor(device));
     }
+
+    private void MenuFavorite_Click(object sender, RoutedEventArgs e)
+    {
+        if (DeviceFrom(sender) is { } device)
+            _viewModel.ToggleFavorite(device);
+    }
+
+    private void ToggleStartup_Click(object sender, RoutedEventArgs e) => _viewModel.RunAtStartup = !_viewModel.RunAtStartup;
 
     private void MenuEdit_Click(object sender, RoutedEventArgs e)
     {

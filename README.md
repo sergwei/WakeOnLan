@@ -8,6 +8,10 @@ Inspirada en WakeMeOnLan, pero con interfaz Fluent (Mica, tema oscuro, iconos de
 - **Escanear la red**: encuentra equipos automáticamente (ARP + ping + DNS), incluso los que tienen el ping bloqueado.
 - **Lista de dispositivos** con estado en vivo (en línea, apagado, encendiendo) y "visto por última vez".
 - **Encender** uno, varios (selección múltiple) o todos.
+- **Favoritos** (estrella ☆): aparecen primero y están siempre a mano desde la **bandeja del sistema**.
+  Al minimizar, la app sigue en la bandeja: un clic en su icono muestra tus favoritos con su estado
+  y un botón para encender los que estén apagados. Te avisa cuando un equipo termina de arrancar.
+- **Iniciar con Windows** (opcional): arranca minimizada en la bandeja.
 - **Añadir / editar / eliminar** dispositivos; obtener la MAC automáticamente a partir de la IP.
 - Envío por **todas las interfaces de red** (broadcast general y de subred), o a una dirección fija.
 - **Importar / exportar** la lista en JSON. Al importar, las direcciones de fuera de tu red local se descartan por seguridad.

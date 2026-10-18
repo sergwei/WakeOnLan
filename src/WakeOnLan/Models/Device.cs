@@ -23,6 +23,7 @@ public sealed class Device : ObservableObject
     private DateTime? _lastSeen;
     private DateTime? _lastWake;
     private DeviceStatus _status;
+    private bool _isFavorite;
 
     public Guid Id { get; set; } = Guid.NewGuid();
 
@@ -66,6 +67,13 @@ public sealed class Device : ObservableObject
     {
         get => _port;
         set => SetProperty(ref _port, value);
+    }
+
+    /// <summary>Los favoritos aparecen primero en la lista y en el panel de la bandeja del sistema.</summary>
+    public bool IsFavorite
+    {
+        get => _isFavorite;
+        set => SetProperty(ref _isFavorite, value);
     }
 
     public DateTime? LastSeen

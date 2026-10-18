@@ -13,6 +13,8 @@ namespace WakeOnLan.Helpers;
 internal static class WindowEffects
 {
     private const int DwmwaUseImmersiveDarkMode = 20;
+    private const int DwmwaWindowCornerPreference = 33;
+    private const int DwmwcpRound = 2;
     private const int DwmwaSystemBackdropType = 38;
     private const int DwmsbtMica = 2;
 
@@ -57,6 +59,19 @@ internal static class WindowEffects
 
             var backdrop = DwmsbtMica;
             DwmSetWindowAttribute(hwnd, DwmwaSystemBackdropType, ref backdrop, sizeof(int));
+        };
+    }
+
+    /// <summary>Ventana flotante sin bordes (panel de la bandeja): tema oscuro y esquinas redondeadas de Windows 11.</summary>
+    public static void ApplyFlyout(Window window)
+    {
+        window.SourceInitialized += (_, _) =>
+        {
+            var hwnd = new WindowInteropHelper(window).Handle;
+            var darkMode = 1;
+            DwmSetWindowAttribute(hwnd, DwmwaUseImmersiveDarkMode, ref darkMode, sizeof(int));
+            var corners = DwmwcpRound;
+            DwmSetWindowAttribute(hwnd, DwmwaWindowCornerPreference, ref corners, sizeof(int));
         };
     }
 

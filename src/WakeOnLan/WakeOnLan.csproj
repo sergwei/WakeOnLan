@@ -4,6 +4,8 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- Solo para NotifyIcon (icono de la bandeja del sistema); la interfaz es WPF. -->
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AssemblyName>WakeOnLan</AssemblyName>
@@ -16,5 +18,20 @@
     <Product>Wake on LAN</Product>
     <Description>Enciende los equipos de tu red con Wake-on-LAN.</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WinForms añade estos using implícitos y sus tipos (Application, MessageBox, Button…) chocan con los de WPF. -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="WakeOnLan.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Icono embebido para la bandeja del sistema. -->
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
 
 </Project>

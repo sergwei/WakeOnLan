@@ -1,4 +1,4 @@
-<Window x:Class="WakeOnLan.Views.MainWindow"
+﻿<Window x:Class="WakeOnLan.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:m="clr-namespace:WakeOnLan.Models"
@@ -16,6 +16,20 @@
     <Window.Resources>
         <ContextMenu x:Key="DeviceMenu" x:Shared="False">
             <MenuItem Click="MenuWake_Click" Header="Encender" Tag="&#xE7E8;" />
+            <MenuItem Click="MenuFavorite_Click">
+                <MenuItem.Style>
+                    <Style BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="MenuItem">
+                        <Setter Property="Header" Value="Añadir a favoritos" />
+                        <Setter Property="Tag" Value="&#xE734;" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                <Setter Property="Header" Value="Quitar de favoritos" />
+                                <Setter Property="Tag" Value="&#xE735;" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
             <MenuItem Click="MenuEdit_Click" Header="Editar" Tag="&#xE70F;" />
             <MenuItem Click="MenuCopyMac_Click" Header="Copiar dirección MAC" Tag="&#xE8C8;" />
             <Separator />
@@ -28,6 +42,20 @@
             <MenuItem Click="Import_Click" Header="Importar dispositivos…" Tag="&#xE8B5;" />
             <MenuItem Click="Export_Click" Header="Exportar dispositivos…" Tag="&#xEDE1;" />
             <MenuItem Click="OpenDataFolder_Click" Header="Abrir carpeta de datos" Tag="&#xE838;" />
+            <Separator />
+            <!-- Casilla: el icono de verificación aparece cuando está activo. -->
+            <MenuItem Click="ToggleStartup_Click" Header="Iniciar con Windows (en la bandeja)">
+                <MenuItem.Style>
+                    <Style BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="MenuItem">
+                        <Setter Property="Tag" Value="" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding RunAtStartup}" Value="True">
+                                <Setter Property="Tag" Value="&#xE73E;" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
         </ContextMenu>
 
         <Style x:Key="DeviceItem" TargetType="ListBoxItem" BasedOn="{StaticResource CardItem}">
@@ -93,6 +121,17 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="3" VerticalAlignment="Center" Orientation="Horizontal">
+                    <Button x:Name="StarButton"
+                            Margin="0,0,4,0"
+                            Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{Binding}"
+                            Style="{StaticResource IconButton}"
+                            ToolTip="Añadir a favoritos">
+                        <TextBlock x:Name="Star"
+                                   Foreground="{StaticResource TextTertiaryBrush}"
+                                   Style="{StaticResource IconText}"
+                                   Text="&#xE734;" />
+                    </Button>
                     <Button Command="{Binding DataContext.WakeCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             CommandParameter="{Binding}"
                             ToolTip="Enviar paquete mágico">
@@ -111,6 +150,11 @@
             </Grid>
 
             <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                    <Setter TargetName="Star" Property="Text" Value="&#xE735;" />
+                    <Setter TargetName="Star" Property="Foreground" Value="{StaticResource CautionBrush}" />
+                    <Setter TargetName="StarButton" Property="ToolTip" Value="Quitar de favoritos" />
+                </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Online">
                     <Setter TargetName="Dot" Property="Fill" Value="{StaticResource SuccessBrush}" />
                     <Setter TargetName="Chip" Property="Background" Value="#266CCB5F" />
@@ -329,6 +373,6 @@
                    Margin="24,0,24,12"
                    FontSize="12"
                    Foreground="{StaticResource TextTertiaryBrush}"
-                   Text="Doble clic para editar · Supr para eliminar · Clic derecho para más opciones · El estado se actualiza cada 10 s" />
+                   Text="Doble clic para editar · Supr para eliminar · Clic derecho para más opciones · Minimiza para usarla desde la bandeja" />
     </Grid>
 </Window>
