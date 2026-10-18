@@ -1,47 +1,82 @@
 name: Release
 
-# Al publicar un tag v1.2.3 se compila y se crea una Release con el portable y el instalador.
+# Al publicar un tag v1.2.3 se compila y se crea una Release con el portable, el instalador y los hashes.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
 
+# Por defecto, solo lectura; el job pide lo mínimo que necesita.
 permissions:
-  contents: write
+  contents: read
+
+env:
+  # Instalador oficial de Inno Setup, verificado por hash antes de ejecutarlo.
+  INNO_URL: https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/innosetup-6.7.3.exe
+  INNO_SHA256: 9C73C3BAE7ED48D44112A0F48E66742C00090BDB5BEF71D9D3C056C66E97B732
 
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write      # crear la Release
+      id-token: write      # firmar las attestations (Sigstore)
+      attestations: write  # guardar las attestations
     steps:
-      - uses: actions/checkout@v4
+      # Acciones fijadas por SHA de commit: un tag puede moverse, un SHA no. Dependabot las actualiza.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "8.0.x"
 
       - name: Calcular versión
         id: version
         shell: pwsh
+        env:
+          # El nombre del tag se lee desde una variable de entorno, nunca interpolado en el script.
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          $v = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '0.0.0-dev' }
+          $v = if ($env:REF_TYPE -eq 'tag') { $env:REF_NAME -replace '^v', '' } else { '0.0.0-dev' }
+          if ($v -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "Versión no válida: '$v'" }
           "value=$v" >> $env:GITHUB_OUTPUT
 
       - name: Instalar Inno Setup
         shell: pwsh
-        run: choco install innosetup -y --no-progress
+        run: |
+          $installer = Join-Path $env:RUNNER_TEMP 'innosetup.exe'
+          Invoke-WebRequest $env:INNO_URL -OutFile $installer
+          $hash = (Get-FileHash $installer -Algorithm SHA256).Hash
+          if ($hash -ne $env:INNO_SHA256) { throw "Hash de Inno Setup inesperado: $hash" }
+          Start-Process $installer -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-' -Wait
 
       - name: Publicar
         shell: pwsh
-        run: ./tools/Publish.ps1 -Version ${{ steps.version.outputs.value }}
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: ./tools/Publish.ps1 -Version $env:VERSION
 
-      - uses: actions/upload-artifact@v4
+      - name: Attestation de procedencia
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: artifacts/*.exe
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: WakeOnLan-${{ steps.version.outputs.value }}
-          path: artifacts/*.exe
+          path: |
+            artifacts/*.exe
+            artifacts/SHA256SUMS.txt
 
       - name: Crear Release
         if: github.ref_type == 'tag'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          files: artifacts/*.exe
+          files: |
+            artifacts/*.exe
+            artifacts/SHA256SUMS.txt
           generate_release_notes: true
+          fail_on_unmatched_files: true
