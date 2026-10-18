@@ -30,9 +30,11 @@ Lo más cómodo es añadirlos mientras están encendidos: así la aplicación de
 
 ### 3. Úsala desde la bandeja del sistema
 - Marca con la **estrella ☆** los equipos que más uses para hacerlos favoritos.
-- Al **minimizar**, la aplicación se queda junto al reloj. Con un clic en su icono ves tus favoritos, su estado
-  y un botón para encenderlos. Te avisa cuando un equipo termina de arrancar.
-- En **Más opciones (⋯) → Iniciar con Windows** puedes hacer que arranque directamente en la bandeja.
+- Al **minimizar o cerrar** la ventana, la aplicación se queda junto al reloj. Con un clic en su icono ves tus
+  favoritos, su estado y un botón para encenderlos. Te avisa cuando un equipo termina de arrancar.
+  Para cerrarla del todo, usa **Salir** en ese mismo panel.
+- Con el instalador, se inicia con Windows directamente en la bandeja. Ambas cosas se pueden cambiar en
+  **Más opciones (⋯)**: *Iniciar con Windows* y *Al cerrar, mantener en la bandeja*.
 
 ### Otras opciones
 - **Clic derecho** sobre un equipo: editar, eliminar o copiar su MAC.

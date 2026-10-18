@@ -47,8 +47,14 @@ CloseApplications=yes
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
+[CustomMessages]
+spanish.StartupTask=Iniciar con Windows (en la bandeja del sistema)
+english.StartupTask=Start with Windows (in the system tray)
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+; Marcada por defecto: la app está pensada para estar siempre disponible en la bandeja.
+Name: "startup"; Description: "{cm:StartupTask}"
 
 [Files]
 Source: "..\artifacts\publish\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -56,6 +62,8 @@ Source: "..\artifacts\publish\*"; DestDir: "{app}"; Flags: ignoreversion recurse
 [Registry]
 ; La app crea esta entrada si el usuario activa "Iniciar con Windows"; al desinstalar se elimina.
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "WakeOnLan"; ValueType: none; Flags: uninsdeletevalue dontcreatekey
+; Mismo formato que escribe la app (StartupRegistration.BuildCommand), para que la casilla del menú aparezca marcada.
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "WakeOnLan"; ValueType: string; ValueData: """{app}\{#AppExe}"" /minimized"; Flags: uninsdeletevalue; Tasks: startup
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"

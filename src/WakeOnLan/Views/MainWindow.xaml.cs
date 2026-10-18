@@ -21,6 +21,7 @@ public partial class MainWindow : Window
     private readonly TrayFlyout _flyout;
     private WindowState _restoreState = WindowState.Normal;
     private bool _trayHintShown;
+    private bool _exiting;
 
     public MainWindow()
     {
@@ -30,7 +31,11 @@ public partial class MainWindow : Window
 
         _flyout = new TrayFlyout(_viewModel);
         _flyout.OpenRequested += (_, _) => RestoreFromTray();
-        _flyout.ExitRequested += (_, _) => Application.Current.Shutdown();
+        _flyout.ExitRequested += (_, _) =>
+        {
+            _exiting = true;
+            Application.Current.Shutdown();
+        };
         _tray.Clicked += (_, _) => _flyout.Toggle();
 
         _viewModel.DeviceCameOnline += (_, device) =>
@@ -42,6 +47,9 @@ public partial class MainWindow : Window
         };
 
         StateChanged += OnStateChanged;
+        Closing += OnClosing;
+        // Al apagar Windows o cerrar sesión (o si el instalador cierra la app para actualizarla) hay que salir de verdad.
+        Application.Current.SessionEnding += (_, _) => _exiting = true;
 
         // La app puede arrancar directamente en la bandeja (sin mostrar nunca la ventana), así que
         // la monitorización empieza aquí y la limpieza se hace al salir de la aplicación, no al cerrar la ventana.
@@ -75,13 +83,28 @@ public partial class MainWindow : Window
         }
 
         // Minimizar = ir a la bandeja: la app sigue vigilando el estado de los equipos.
+        HideToTray();
+    }
+
+    private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        // La ✕ también deja la app en la bandeja (si así está configurado); para salir del todo, "Salir" en la bandeja.
+        if (_exiting || !_viewModel.CloseToTray)
+            return;
+
+        e.Cancel = true;
+        HideToTray();
+    }
+
+    private void HideToTray()
+    {
         Hide();
         if (_trayHintShown)
             return;
 
         _trayHintShown = true;
         _tray.ShowNotification("Wake on LAN sigue activo",
-            "Haz clic en el icono de la bandeja para ver y encender tus favoritos.");
+            "Haz clic en el icono de la bandeja para ver y encender tus favoritos, o en Salir para cerrarla.");
     }
 
     private void UpdateTrayText() => _tray.Text = $"Wake on LAN · {_viewModel.FavoritesSummary}";
@@ -145,6 +168,8 @@ public partial class MainWindow : Window
     }
 
     private void ToggleStartup_Click(object sender, RoutedEventArgs e) => _viewModel.RunAtStartup = !_viewModel.RunAtStartup;
+
+    private void ToggleCloseToTray_Click(object sender, RoutedEventArgs e) => _viewModel.CloseToTray = !_viewModel.CloseToTray;
 
     private void MenuEdit_Click(object sender, RoutedEventArgs e)
     {

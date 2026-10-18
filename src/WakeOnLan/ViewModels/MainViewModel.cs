@@ -14,6 +14,7 @@ public sealed class MainViewModel : ObservableObject
     private const int PingTimeoutMs = 1500;
 
     private readonly DeviceStore _store = new();
+    private readonly AppSettings _settings = AppSettings.Load(AppSettings.DefaultPath);
     private readonly DispatcherTimer _statusTimer = new() { Interval = TimeSpan.FromSeconds(10) };
     private readonly DispatcherTimer _toastTimer = new();
     private string _searchText = string.Empty;
@@ -116,6 +117,25 @@ public sealed class MainViewModel : ObservableObject
             catch (Exception ex)
             {
                 ShowToast($"No se pudo cambiar el inicio automático: {ex.Message}", isError: true);
+            }
+            OnPropertyChanged();
+        }
+    }
+
+    public bool CloseToTray
+    {
+        get => _settings.CloseToTray;
+        set
+        {
+            _settings.CloseToTray = value;
+            try
+            {
+                _settings.Save(AppSettings.DefaultPath);
+                ShowToast(value ? "Al cerrar, Wake on LAN seguirá en la bandeja." : "Al cerrar, Wake on LAN se cerrará del todo.");
+            }
+            catch (Exception ex)
+            {
+                ShowToast($"No se pudo guardar la preferencia: {ex.Message}", isError: true);
             }
             OnPropertyChanged();
         }

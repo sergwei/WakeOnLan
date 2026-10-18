@@ -56,6 +56,18 @@
                     </Style>
                 </MenuItem.Style>
             </MenuItem>
+            <MenuItem Click="ToggleCloseToTray_Click" Header="Al cerrar, mantener en la bandeja">
+                <MenuItem.Style>
+                    <Style BasedOn="{StaticResource {x:Type MenuItem}}" TargetType="MenuItem">
+                        <Setter Property="Tag" Value="" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding CloseToTray}" Value="True">
+                                <Setter Property="Tag" Value="&#xE73E;" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
         </ContextMenu>
 
         <Style x:Key="DeviceItem" TargetType="ListBoxItem" BasedOn="{StaticResource CardItem}">
