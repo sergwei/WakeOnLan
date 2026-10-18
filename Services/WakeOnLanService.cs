@@ -34,7 +34,7 @@ public static class WakeOnLanService
         var sent = 0;
         if (IPAddress.TryParse(device.BroadcastAddress, out var customTarget))
         {
-            // Destino fijo: un broadcast concreto o una IP pública con reenvío de puertos en el router.
+            // Destino fijo: el broadcast de una subred concreta (por ejemplo, la de casa a través de una VPN).
             sent += await SendAsync(null, customTarget, ports, packet).ConfigureAwait(false);
         }
         else

@@ -58,7 +58,6 @@ internal static class CommandLine
             {
                 // Task.Run evita el interbloqueo con el contexto de sincronización de WPF.
                 Task.Run(() => WakeOnLanService.WakeAsync(device)).GetAwaiter().GetResult();
-                device.LastWake = DateTime.Now;
             }
             catch (Exception ex)
             {
@@ -66,15 +65,7 @@ internal static class CommandLine
             }
         }
 
-        try
-        {
-            store.Save(devices);
-        }
-        catch (Exception ex)
-        {
-            errors.Add($"No se pudo guardar la lista: {ex.Message}");
-        }
-
+        // Solo lectura: si la ventana principal está abierta, guardar aquí pisaría sus cambios.
         if (errors.Count == 0)
             return 0;
 

@@ -1,5 +1,3 @@
-using System.Net;
-using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Controls;
 using WakeOnLan.Helpers;
@@ -48,9 +46,9 @@ public partial class DeviceDialog : Window
         var ip = IpBox.Text.Trim();
         var broadcast = BroadcastBox.Text.Trim();
 
-        if (name.Length == 0)
+        if (DeviceValidator.ValidateName(name) is { } nameError)
         {
-            ShowError("Escribe un nombre para el dispositivo.", NameBox);
+            ShowError(nameError, NameBox);
             return;
         }
 
@@ -70,20 +68,19 @@ public partial class DeviceDialog : Window
             return;
         }
 
-        if (ip.Length > 0 && !NetworkHelper.IsValidHost(ip))
+        if (ip.Length > 0 && !DeviceValidator.IsValidHost(ip))
         {
             ShowError("La dirección IP o el nombre de host no son válidos.", IpBox);
             return;
         }
 
-        if (broadcast.Length > 0 &&
-            !(IPAddress.TryParse(broadcast, out var target) && target.AddressFamily == AddressFamily.InterNetwork))
+        if (broadcast.Length > 0 && !DeviceValidator.IsValidTarget(broadcast))
         {
             ShowError("La dirección de envío debe ser una IPv4, por ejemplo 192.168.1.255.", BroadcastBox);
             return;
         }
 
-        if (!int.TryParse(PortBox.Text.Trim(), out var port) || port is < 1 or > 65535)
+        if (!int.TryParse(PortBox.Text.Trim(), out var port) || !DeviceValidator.IsValidPort(port))
         {
             ShowError("El puerto debe ser un número entre 1 y 65535 (normalmente 9).", PortBox);
             return;

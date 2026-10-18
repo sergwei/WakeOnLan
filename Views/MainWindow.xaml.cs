@@ -67,7 +67,8 @@ public partial class MainWindow : Window
     private void OpenDataFolder_Click(object sender, RoutedEventArgs e)
     {
         Directory.CreateDirectory(_viewModel.DataFolder);
-        Process.Start(new ProcessStartInfo("explorer.exe", $"\"{_viewModel.DataFolder}\"") { UseShellExecute = true });
+        // Se abre la carpeta por asociación del shell, sin lanzar un ejecutable por nombre.
+        Process.Start(new ProcessStartInfo(_viewModel.DataFolder) { UseShellExecute = true });
     }
 
     // ----- Menú de cada dispositivo -----

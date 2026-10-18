@@ -237,24 +237,29 @@ public sealed class MainViewModel : ObservableObject
             var known = Devices.Select(d => MacAddressHelper.Normalize(d.MacAddress))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
             var added = 0;
+            var withRemovedAddress = 0;
 
             foreach (var device in DeviceStore.Read(path))
             {
-                if (!MacAddressHelper.TryParse(device.MacAddress, out var mac))
+                if (!DeviceValidator.TrySanitizeImported(device, out var removedAddress))
                     continue;
-
-                device.MacAddress = MacAddressHelper.Format(mac);
                 if (!known.Add(device.MacAddress))
                     continue; // Ya existe: no se duplica.
 
-                device.Id = Guid.NewGuid();
-                device.Status = DeviceStatus.Unknown;
                 Devices.Add(device);
                 added++;
+                if (removedAddress)
+                    withRemovedAddress++;
             }
 
             Save();
-            ShowToast(added == 0 ? "No había dispositivos nuevos que importar." : $"Se importaron {added} dispositivos.");
+            var message = added == 0 ? "No había dispositivos nuevos que importar." : $"Se importaron {added} dispositivos.";
+            if (withRemovedAddress > 0)
+            {
+                message += $" Por seguridad se quitaron las direcciones fuera de tu red local en {withRemovedAddress} de ellos; " +
+                           "revísalos y añádelas a mano si son de confianza.";
+            }
+            ShowToast(message, isError: withRemovedAddress > 0);
             _ = RefreshStatusAsync();
         }
         catch (Exception ex)

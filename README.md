@@ -9,9 +9,8 @@ Inspirada en WakeMeOnLan, pero con interfaz Fluent (Mica, tema oscuro, iconos de
 - **Lista de dispositivos** con estado en vivo (en línea, apagado, encendiendo) y "visto por última vez".
 - **Encender** uno, varios (selección múltiple) o todos.
 - **Añadir / editar / eliminar** dispositivos; obtener la MAC automáticamente a partir de la IP.
-- Envío por **todas las interfaces de red** (broadcast general y de subred), o a una dirección fija
-  (útil para despertar equipos desde fuera con reenvío de puertos).
-- **Importar / exportar** la lista en JSON.
+- Envío por **todas las interfaces de red** (broadcast general y de subred), o a una dirección fija.
+- **Importar / exportar** la lista en JSON. Al importar, las direcciones de fuera de tu red local se descartan por seguridad.
 - **Línea de comandos** para accesos directos o tareas programadas:
 
   ```
@@ -33,6 +32,19 @@ Descarga desde [Releases](../../releases):
 
 No hace falta tener .NET instalado.
 
+### Verificar la descarga
+
+Cada Release incluye `SHA256SUMS.txt` y una *attestation* de procedencia firmada por GitHub,
+que demuestra que el ejecutable se compiló en este repositorio a partir del código publicado:
+
+```powershell
+Get-FileHash .\WakeOnLan-x.y.z-setup.exe -Algorithm SHA256        # compáralo con SHA256SUMS.txt
+gh attestation verify .\WakeOnLan-x.y.z-setup.exe --repo sergwei/WakeOnLan
+```
+
+Los ejecutables todavía no están firmados con un certificado de código, así que Windows SmartScreen
+puede mostrar "Editor desconocido" la primera vez.
+
 ## Requisitos del equipo que quieres encender
 
 1. Wake-on-LAN activado en la **BIOS/UEFI**.
@@ -41,6 +53,14 @@ No hace falta tener .NET instalado.
    - *Opciones avanzadas* → "Wake on Magic Packet" = Habilitado.
 3. Recomendado: desactivar el **inicio rápido** (Opciones de energía), porque impide WoL desde apagado completo.
 4. Conexión por cable: la mayoría de tarjetas Wi-Fi no admiten WoL.
+
+## Seguridad
+
+- Wake-on-LAN **no tiene autenticación**: cualquiera que pueda enviar un paquete a tu red local puede encender tus equipos.
+- Para encender equipos **desde fuera de casa usa una VPN** (WireGuard, Tailscale…) y envía el paquete como si estuvieras en la red local.
+  **No abras ni redirijas puertos UDP** del router hacia el broadcast de tu red: expone la LAN a cualquiera en Internet.
+- La aplicación no abre puertos de entrada; solo envía paquetes UDP, pings y consultas ARP/DNS.
+- Para informar de una vulnerabilidad, abre un *security advisory* privado en la pestaña **Security** del repositorio.
 
 ## Compilar desde el código
 
@@ -60,13 +80,13 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-El workflow `.github/workflows/release.yml` compila y adjunta el instalador y el portable a la Release.
+El workflow `.github/workflows/release.yml` compila y adjunta a la Release el instalador, el portable, `SHA256SUMS.txt` y las attestations.
 
 ## Estructura
 
 ```
 Models/      Device, ScanResult
-Services/    WakeOnLanService (paquete mágico), NetworkScanner, NetworkHelper (ARP/ping/DNS), DeviceStore (JSON)
+Services/    WakeOnLanService (paquete mágico), NetworkScanner, NetworkHelper (ARP/ping/DNS), DeviceStore (JSON), DeviceValidator
 ViewModels/  MainViewModel
 Views/       MainWindow, DeviceDialog, ScanDialog, ConfirmDialog
 Themes/      Theme.xaml (estilos Fluent)

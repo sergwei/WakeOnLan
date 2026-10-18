@@ -51,9 +51,6 @@ public static class NetworkHelper
         return new IPAddress(bytes);
     }
 
-    public static bool IsValidHost(string host) =>
-        Uri.CheckHostName(host) is UriHostNameType.IPv4 or UriHostNameType.Dns;
-
     /// <param name="preferGateway">
     /// Si es true y hay interfaces con puerta de enlace, devuelve solo esas (descarta adaptadores
     /// virtuales como Hyper-V o WSL, que no interesan al escanear).
