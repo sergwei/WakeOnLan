@@ -1,0 +1,55 @@
+name: CI
+
+# Compila y pasa los tests en cada push a main y en cada pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restaurar
+        run: dotnet restore WakeOnLan.sln
+
+      - name: Compilar
+        run: dotnet build WakeOnLan.sln -c Release --no-restore
+
+      - name: Tests
+        run: dotnet test WakeOnLan.sln -c Release --no-build --logger "trx;LogFileName=results.trx" --results-directory TestResults
+
+      - name: Resultados de los tests
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results
+          path: TestResults/*.trx
+          if-no-files-found: ignore
+
+      # Build de prueba descargable de cada commit (sin firmar, sin instalador).
+      - name: Publicar portable
+        shell: pwsh
+        run: ./tools/Publish.ps1 -Version 0.0.0-ci -Stage Build
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: WakeOnLan-portable-${{ github.sha }}
+          path: artifacts/publish-portable/WakeOnLan.exe
+          retention-days: 14

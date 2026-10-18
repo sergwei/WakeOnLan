@@ -67,7 +67,8 @@ puede mostrar "Editor desconocido" la primera vez.
 Requiere el [SDK de .NET 8](https://dotnet.microsoft.com/download/dotnet/8.0).
 
 ```powershell
-dotnet run                                              # ejecutar en desarrollo
+dotnet run --project src\WakeOnLan                       # ejecutar en desarrollo
+dotnet test                                             # tests unitarios
 powershell -ExecutionPolicy Bypass -File tools\Publish.ps1 -Version 1.0.0   # portable + instalador en .\artifacts
 ```
 
@@ -80,21 +81,39 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-El workflow `.github/workflows/release.yml` compila y adjunta a la Release el instalador, el portable, `SHA256SUMS.txt` y las attestations.
+El workflow `.github/workflows/release.yml` pasa los tests, compila, firma (si SignPath está configurado) y adjunta a la Release
+el instalador, el portable, `SHA256SUMS.txt` y las attestations. Además, `ci.yml` compila y pasa los tests en cada push y pull request.
 
 ## Estructura
 
 ```
-Models/      Device, ScanResult
-Services/    WakeOnLanService (paquete mágico), NetworkScanner, NetworkHelper (ARP/ping/DNS), DeviceStore (JSON), DeviceValidator
-ViewModels/  MainViewModel
-Views/       MainWindow, DeviceDialog, ScanDialog, ConfirmDialog
-Themes/      Theme.xaml (estilos Fluent)
-Helpers/     WindowEffects (Mica), ObservableObject, RelayCommand
-installer/   Script de Inno Setup
-tools/       Publish.ps1, New-AppIcon.ps1
+src/WakeOnLan/
+  Models/      Device, ScanResult
+  Services/    WakeOnLanService (paquete mágico), NetworkScanner, NetworkHelper (ARP/ping/DNS), DeviceStore (JSON), DeviceValidator
+  ViewModels/  MainViewModel
+  Views/       MainWindow, DeviceDialog, ScanDialog, ConfirmDialog
+  Themes/      Theme.xaml (estilos Fluent)
+  Helpers/     WindowEffects (Mica), ObservableObject, RelayCommand
+tests/WakeOnLan.Tests/   Tests unitarios (xUnit)
+installer/               Script de Inno Setup
+signpath/                Configuración de artefactos para la firma de código
+tools/                   Publish.ps1, New-AppIcon.ps1
 ```
 
+## Code signing policy
+
+Las versiones publicadas se firmarán con firma de código gratuita de [SignPath.io](https://about.signpath.io/),
+con certificado de [SignPath Foundation](https://signpath.org/).
+
+- Autores y revisores: [sergwei](https://github.com/sergwei)
+- Aprobadores de firma: [sergwei](https://github.com/sergwei)
+
+Solo se firman binarios compilados por GitHub Actions a partir del código de este repositorio, y cada versión
+requiere aprobación manual.
+
+**Privacidad:** este programa no transfiere ninguna información a otros sistemas de red, salvo que lo solicite
+expresamente el usuario o la persona que lo instala o lo utiliza. Solo envía los paquetes Wake-on-LAN, los pings
+y las consultas ARP/DNS necesarios para su funcionamiento, a las direcciones que configura el propio usuario.
 ## Licencia
 
 MIT. Consulta [LICENSE](LICENSE).

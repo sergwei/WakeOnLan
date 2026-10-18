@@ -9,6 +9,13 @@
 #define AppName "Wake on LAN"
 #define AppExe "WakeOnLan.exe"
 
+; VersionInfoVersion solo admite números: "1.2.3-beta" -> "1.2.3".
+#if Pos("-", AppVersion) > 0
+  #define NumericVersion Copy(AppVersion, 1, Pos("-", AppVersion) - 1)
+#else
+  #define NumericVersion AppVersion
+#endif
+
 [Setup]
 AppId={{3F6B2A0E-8C4D-4E61-9B5A-7D2C1E0F9A41}
 AppName={#AppName}
@@ -24,7 +31,12 @@ ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.17763
 OutputDir=..\artifacts
 OutputBaseFilename=WakeOnLan-{#AppVersion}-setup
-SetupIconFile=..\Assets\app.ico
+SetupIconFile=..\src\WakeOnLan\Assets\app.ico
+; Metadatos del ejecutable: SignPath exige que el nombre y la versión del producto coincidan con la release.
+VersionInfoVersion={#NumericVersion}
+VersionInfoProductName={#AppName}
+VersionInfoProductTextVersion={#AppVersion}
+VersionInfoDescription={#AppName} Setup
 UninstallDisplayIcon={app}\{#AppExe}
 Compression=lzma2/max
 SolidCompression=yes

@@ -1,6 +1,7 @@
 name: Release
 
-# Al publicar un tag v1.2.3 se compila y se crea una Release con el portable, el instalador y los hashes.
+# Al publicar un tag v1.2.3 se pasan los tests, se compila, se firma (si SignPath está configurado)
+# y se crea una Release con el portable, el instalador, los hashes y las attestations.
 on:
   push:
     tags: ["v*"]
@@ -16,12 +17,16 @@ env:
   INNO_SHA256: 9C73C3BAE7ED48D44112A0F48E66742C00090BDB5BEF71D9D3C056C66E97B732
 
 jobs:
-  build:
+  release:
     runs-on: windows-latest
     permissions:
       contents: write      # crear la Release
+      actions: read        # SignPath lee los artefactos del job
       id-token: write      # firmar las attestations (Sigstore)
       attestations: write  # guardar las attestations
+    env:
+      # La firma se activa sola cuando existe la variable del repositorio SIGNPATH_ORGANIZATION_ID.
+      SIGN: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' && github.ref_type == 'tag' }}
     steps:
       # Acciones fijadas por SHA de commit: un tag puede moverse, un SHA no. Dependabot las actualiza.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -44,6 +49,9 @@ jobs:
           if ($v -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "Versión no válida: '$v'" }
           "value=$v" >> $env:GITHUB_OUTPUT
 
+      - name: Tests
+        run: dotnet test WakeOnLan.sln -c Release
+
       - name: Instalar Inno Setup
         shell: pwsh
         run: |
@@ -53,11 +61,85 @@ jobs:
           if ($hash -ne $env:INNO_SHA256) { throw "Hash de Inno Setup inesperado: $hash" }
           Start-Process $installer -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-' -Wait
 
-      - name: Publicar
+      - name: Compilar
         shell: pwsh
         env:
           VERSION: ${{ steps.version.outputs.value }}
-        run: ./tools/Publish.ps1 -Version $env:VERSION
+        run: ./tools/Publish.ps1 -Version $env:VERSION -Stage Build
+
+      # ----- Firma de los ejecutables (antes de empaquetarlos en el instalador) -----
+      - name: Subir ejecutables sin firmar
+        id: unsigned-app
+        if: env.SIGN == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unsigned-app
+          path: |
+            artifacts/publish/WakeOnLan.exe
+            artifacts/publish/WakeOnLan.dll
+            artifacts/publish-portable/WakeOnLan.exe
+
+      - name: Firmar ejecutables
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: app
+          github-artifact-id: ${{ steps.unsigned-app.outputs.artifact-id }}
+          parameters: |
+            version: "${{ steps.version.outputs.value }}"
+          # SignPath Foundation exige aprobación manual: tiempo de sobra para aprobarla.
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: artifacts
+
+      - name: Empaquetar
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: ./tools/Publish.ps1 -Version $env:VERSION -Stage Package
+
+      # ----- Firma del instalador -----
+      - name: Subir instalador sin firmar
+        id: unsigned-installer
+        if: env.SIGN == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unsigned-installer
+          path: artifacts/WakeOnLan-${{ steps.version.outputs.value }}-setup.exe
+
+      - name: Firmar instalador
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: installer
+          github-artifact-id: ${{ steps.unsigned-installer.outputs.artifact-id }}
+          parameters: |
+            version: "${{ steps.version.outputs.value }}"
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: artifacts
+
+      - name: Verificar firmas
+        if: env.SIGN == 'true'
+        shell: pwsh
+        run: |
+          Get-ChildItem artifacts -Filter *.exe | ForEach-Object {
+            $s = Get-AuthenticodeSignature $_.FullName
+            if ($s.Status -ne 'Valid') { throw "$($_.Name): firma $($s.Status)" }
+            "$($_.Name): $($s.SignerCertificate.Subject)"
+          }
+
+      - name: Hashes
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: ./tools/Publish.ps1 -Version $env:VERSION -Stage Checksums
 
       - name: Attestation de procedencia
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
