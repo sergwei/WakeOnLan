@@ -8,6 +8,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- Versiones exactas (y sus hashes) fijadas en packages.lock.json; en la CI (CI=true)
+         la restauración falla si no coinciden, en vez de descargar otra versión en silencio. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(CI)' == 'true'">true</RestoreLockedMode>
   </PropertyGroup>
 
   <ItemGroup>

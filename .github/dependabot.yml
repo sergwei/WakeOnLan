@@ -5,3 +5,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+
+  # Paquetes NuGet (solo los usa el proyecto de tests). Revisar cada PR antes de aceptarlo.
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly

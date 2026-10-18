@@ -2,10 +2,10 @@ name: Release
 
 # Al publicar un tag v1.2.3 se pasan los tests, se compila, se firma (si SignPath está configurado)
 # y se crea una Release con el portable, el instalador, los hashes y las attestations.
+# (Para probar la compilación sin publicar está ci.yml, que se ejecuta en cada push.)
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch:
 
 # Por defecto, solo lectura; el job pide lo mínimo que necesita.
 permissions:
@@ -17,8 +17,28 @@ env:
   INNO_SHA256: 9C73C3BAE7ED48D44112A0F48E66742C00090BDB5BEF71D9D3C056C66E97B732
 
 jobs:
-  release:
+  # Los tests ejecutan código de terceros (paquetes NuGet de xUnit). Van en un job aparte, sin permisos
+  # ni secretos, para que ese código nunca toque los binarios que se firman y se publican.
+  test:
     runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Tests
+        run: dotnet test WakeOnLan.sln -c Release
+
+  # Compila solo la app (sin dependencias NuGet de terceros), la firma y publica la Release.
+  release:
+    needs: test
+    runs-on: windows-latest
+    # Environment protegido: solo tags v*, requiere aprobación manual y guarda los secretos de firma.
+    environment: release
     permissions:
       contents: write      # crear la Release
       actions: read        # SignPath lee los artefactos del job
@@ -49,9 +69,6 @@ jobs:
           if ($v -notmatch '^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "Versión no válida: '$v'" }
           "value=$v" >> $env:GITHUB_OUTPUT
 
-      - name: Tests
-        run: dotnet test WakeOnLan.sln -c Release
-
       - name: Instalar Inno Setup
         shell: pwsh
         run: |
@@ -78,6 +95,8 @@ jobs:
             artifacts/publish/WakeOnLan.exe
             artifacts/publish/WakeOnLan.dll
             artifacts/publish-portable/WakeOnLan.exe
+          # Solo hace falta mientras SignPath los descarga: no dejar binarios sin firmar a la vista.
+          retention-days: 1
 
       - name: Firmar ejecutables
         if: env.SIGN == 'true'
@@ -109,6 +128,7 @@ jobs:
         with:
           name: unsigned-installer
           path: artifacts/WakeOnLan-${{ steps.version.outputs.value }}-setup.exe
+          retention-days: 1
 
       - name: Firmar instalador
         if: env.SIGN == 'true'
@@ -152,6 +172,8 @@ jobs:
           path: |
             artifacts/*.exe
             artifacts/SHA256SUMS.txt
+          # La copia que vale es la de la Release.
+          retention-days: 7
 
       - name: Crear Release
         if: github.ref_type == 'tag'

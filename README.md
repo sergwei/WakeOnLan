@@ -85,8 +85,9 @@ git tag v1.0.0
 git push origin v1.0.0
 ```
 
-El workflow `.github/workflows/release.yml` pasa los tests, compila, firma (si SignPath está configurado) y adjunta a la Release
-el instalador, el portable, `SHA256SUMS.txt` y las attestations. Además, `ci.yml` compila y pasa los tests en cada push y pull request.
+El workflow `.github/workflows/release.yml` pasa los tests en un job aislado y, tras la aprobación manual del
+environment `release`, compila, firma (si SignPath está configurado) y adjunta a la Release el instalador, el portable,
+`SHA256SUMS.txt` y las attestations. Además, `ci.yml` compila y pasa los tests en cada push y pull request.
 
 ## Estructura
 
@@ -106,8 +107,8 @@ tools/                   Publish.ps1, New-AppIcon.ps1
 
 ## Code signing policy
 
-Las versiones publicadas se firmarán con firma de código gratuita de [SignPath.io](https://about.signpath.io/),
-con certificado de [SignPath Foundation](https://signpath.org/).
+**Las versiones actuales todavía no están firmadas.** Cuando se active la firma, se usará la firma de código
+gratuita de [SignPath.io](https://about.signpath.io/), con certificado de [SignPath Foundation](https://signpath.org/).
 
 - Autores y revisores: [sergwei](https://github.com/sergwei)
 - Aprobadores de firma: [sergwei](https://github.com/sergwei)
@@ -118,6 +119,7 @@ requiere aprobación manual.
 **Privacidad:** este programa no transfiere ninguna información a otros sistemas de red, salvo que lo solicite
 expresamente el usuario o la persona que lo instala o lo utiliza. Solo envía los paquetes Wake-on-LAN, los pings
 y las consultas ARP/DNS necesarios para su funcionamiento, a las direcciones que configura el propio usuario.
+
 ## Licencia
 
 MIT. Consulta [LICENSE](LICENSE).
